@@ -1,5 +1,4 @@
 package nachos.threads;
-import java.util.LinkedList;
 import nachos.machine.*;
 
 /**
@@ -32,13 +31,13 @@ public class Condition2 {
      * automatically reacquire the lock before <tt>sleep()</tt> returns.
      */
     public void sleep() {
-	Lib.assertTrue(conditionLock.isHeldByCurrentThread());
-	conditionLock.release();
-	boolean intStatus = Machine.interrupt().disable();
-	waitQueue.waitForAccess(KThread.currentThread());
-	KThread.sleep();
-	Machine.interrupt().restore(intStatus);
-	conditionLock.acquire();
+	Lib.assertTrue(conditionLock.isHeldByCurrentThread()); //does this thread hold the lock
+	conditionLock.release();							   //release this lock
+	boolean intStatus = Machine.interrupt().disable();	   //set status var
+	waitQueue.waitForAccess(KThread.currentThread());	   //Queue is waiting for access to the new current thread
+	KThread.sleep();										// thread relinquishes CPU
+	Machine.interrupt().restore(intStatus);				   //restore to the earlier status
+	conditionLock.acquire();								//automatically reacquire lock 
     }
 
     /**
@@ -46,13 +45,13 @@ public class Condition2 {
      * current thread must hold the associated lock.
      */
     public void wake() {
-	Lib.assertTrue(conditionLock.isHeldByCurrentThread());
-	boolean inStatus = Machine.interrupt().disable();
-	KThread thread = waitQueue.nextThread();
-	if(thread != null) {
+	Lib.assertTrue(conditionLock.isHeldByCurrentThread());  //does current thread hold associated lock
+	boolean inStatus = Machine.interrupt().disable();       //get the status now
+	KThread thread = waitQueue.nextThread();				//choosing the next thread to use now that we're awake
+	if(thread != null) {									//make sure that there's nothing in it
 		thread.ready();
 	}
-	Machine.interrupt().restore(inStatus);
+	Machine.interrupt().restore(inStatus);					//restore our original status
     }
 
     /**
@@ -62,7 +61,7 @@ public class Condition2 {
     public void wakeAll() {
 	Lib.assertTrue(conditionLock.isHeldByCurrentThread());
 	boolean inStatus = Machine.interrupt().disable();
-	while(true) {
+	while(true) {											//run through and wake all of the threads
 		KThread thread = waitQueue.nextThread();
 		if(thread == null)break;
 		thread.ready();
