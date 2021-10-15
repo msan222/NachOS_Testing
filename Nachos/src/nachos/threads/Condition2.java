@@ -1,5 +1,4 @@
 package nachos.threads;
-import java.util.LinkedList;
 import nachos.machine.*;
 
 /**
@@ -32,13 +31,13 @@ public class Condition2 {
      * automatically reacquire the lock before <tt>sleep()</tt> returns.
      */
     public void sleep() {
-	Lib.assertTrue(conditionLock.isHeldByCurrentThread());
+	Lib.assertTrue(conditionLock.isHeldByCurrentThread());			
 	conditionLock.release();
-	boolean intStatus = Machine.interrupt().disable();
+	boolean machstat = Machine.interrupt().disable();
 	waitQueue.waitForAccess(KThread.currentThread());
 	KThread.sleep();
-	Machine.interrupt().restore(intStatus);
 	conditionLock.acquire();
+	Machine.interrupt().restore(machstat);
     }
 
     /**
@@ -47,12 +46,12 @@ public class Condition2 {
      */
     public void wake() {
 	Lib.assertTrue(conditionLock.isHeldByCurrentThread());
-	boolean inStatus = Machine.interrupt().disable();
-	KThread thread = waitQueue.nextThread();
-	if(thread != null) {
-		thread.ready();
+	boolean machstat = Machine.interrupt().disable();
+	KThread thread = waitQueue.nextThread();				//grabbing that next thread
+	if(thread != null) {									//as long as it isn't empty
+		thread.ready();										//now it's awake
 	}
-	Machine.interrupt().restore(inStatus);
+	Machine.interrupt().restore(machstat);
     }
 
     /**
@@ -61,13 +60,13 @@ public class Condition2 {
      */
     public void wakeAll() {
 	Lib.assertTrue(conditionLock.isHeldByCurrentThread());
-	boolean inStatus = Machine.interrupt().disable();
+	boolean machstat = Machine.interrupt().disable();
 	while(true) {
 		KThread thread = waitQueue.nextThread();
-		if(thread == null)break;
+		if(thread == null)break;						//since we have to keep going to the next thread use a break statement to finish once its empty
 		thread.ready();
 	}
-	Machine.interrupt().restore(inStatus);
+	Machine.interrupt().restore(machstat);
     }
     
     
