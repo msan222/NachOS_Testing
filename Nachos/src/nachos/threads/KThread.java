@@ -33,6 +33,8 @@ public class KThread {
      *
      * @return	the current thread.
      */
+	
+	//child calls join, parent has to finish before child starts again
     public static KThread currentThread() {
 	Lib.assertTrue(currentThread != null);
 	return currentThread;
@@ -42,20 +44,18 @@ public class KThread {
      * Allocate a new <tt>KThread</tt>. If this is the first <tt>KThread</tt>,
      * create an idle thread as well.
      */
-    public KThread() {
+    public KThread() { //******Might need adjustments
 	if (currentThread != null) {
 	    tcb = new TCB();
 	}	    
 	else {
+		joinQueue=ThreadedKernel.scheduler.newThreadQueue(false);
 	    readyQueue = ThreadedKernel.scheduler.newThreadQueue(false);
-	    joinQueue=ThreadedKernel.scheduler.newThreadQueue(false);
 	    readyQueue.acquire(this);	    
-
 	    currentThread = this;
 	    tcb = TCB.currentTCB();
 	    name = "main";
 	    restoreState();
-
 	    createIdleThread();
 	}
     }
@@ -78,7 +78,6 @@ public class KThread {
      */
     public KThread setTarget(Runnable target) {
 	Lib.assertTrue(status == statusNew);
-	
 	this.target = target;
 	return this;
     }
@@ -195,10 +194,9 @@ public class KThread {
 
 	currentThread.status = statusFinished;
 	
-	KThread thread = joinQueue.nextThread();
-	
-	if(thread != null){
-		thread.ready();
+	KThread newthread = joinQueue.nextThread();					//keeping track and moving them up here
+	if(newthread != null){
+		newthread.ready();
 	}
 	
 	sleep();
@@ -287,7 +285,6 @@ public class KThread {
 	if(this.status == statusFinished) {
 		return;
 	}
-	
 	boolean inStatus = Machine.interrupt().disable();
 	if(KThread.currentThread.isJoined);
 	else {
