@@ -34,6 +34,7 @@ public class Condition2 {
 	Lib.assertTrue(conditionLock.isHeldByCurrentThread());			
 	conditionLock.release();
 	boolean machstat = Machine.interrupt().disable();
+	countVal++;
 	waitQueue.waitForAccess(KThread.currentThread());
 	KThread.sleep();
 	conditionLock.acquire();
@@ -49,6 +50,7 @@ public class Condition2 {
 	boolean machstat = Machine.interrupt().disable();
 	KThread thread = waitQueue.nextThread();				//grabbing that next thread
 	if(thread != null) {									//as long as it isn't empty
+		countVal--;
 		thread.ready();										//now it's awake
 	}
 	Machine.interrupt().restore(machstat);
@@ -65,12 +67,16 @@ public class Condition2 {
 		KThread thread = waitQueue.nextThread();
 		if(thread == null)break;						//since we have to keep going to the next thread use a break statement to finish once its empty
 		thread.ready();
+		countVal = 0;
 	}
 	Machine.interrupt().restore(machstat);
     }
     
-    
+    public int getThreadCount() {
+    	return countVal;
+    }
 
     private Lock conditionLock;
     private ThreadQueue waitQueue;
+    private int countVal;
 }

@@ -1,6 +1,6 @@
 package nachos.threads;
-
 import nachos.machine.*;
+import java.util.LinkedList;
 
 /**
  * A <i>communicator</i> allows threads to synchronously exchange 32-bit
@@ -14,10 +14,7 @@ public class Communicator {
      * Allocate a new communicator.
      */
     public Communicator() {
-    	lock = new Lock();
-    	listener = new Condition2(lock);
-    	speaker = new Condition2(lock);
-    	waitingReturn = new Condition2(lock);
+    	inTransaction = false;
     }
 
     /**
@@ -30,21 +27,15 @@ public class Communicator {
      *
      * @param	word	the integer to transfer.
      */
-    public void speak(int word) {
-    	lock.acquire();
-    	while(sendingSpeaker !=0) {
-    		waitingSpeaker++;
+    public void speak(int word) {  
+    	mutlock.acquire();
+    	while(inTransaction || listener.getThreadCount() == 0){
     		speaker.sleep();
-    		waitingSpeaker--;
     	}
-    	sendingSpeaker++;
+    	inTransaction = true;
     	data = word;
-    	if(recievingListener != 0) {
-    		waitingReturn.wake();
-    	}
-    	lock.release();
-    	return;
-    	
+    	listener.wake();
+    	mutlock.release();
     }
 
     /**
@@ -53,35 +44,28 @@ public class Communicator {
      *
      * @return	the integer transferred.
      */    
-    public int listen() {
-    lock.acquire();
-    	while(recievingListener != 0) {
-    		waitingListener++;
-    		listener.sleep();
-    		waitingListener--;
+    public int listen(){ 
+    int track;
+    mutlock.acquire();
+    while(!inTransaction) {
+    	if(speaker.getThreadCount() > 0) {
+    		speaker.wake();
     	}
-    	recievingListener++;
-    	if(sendingSpeaker != 0){
-    		waitingReturn.wake();
-    	}else {
-    		waitingReturn.sleep();
-    	}
-    	if(waitingListener !=0) {
-    		listener.wake();
-    	}
-    	int word = data;
-    	recievingListener--;
-    	lock.release();
-    	return word;
+    	listener.sleep();
+    }
+    track = data;
+    inTransaction = false;
+    if(listener.getThreadCount() > 0 && speaker.getThreadCount() >0) {
+    	speaker.wake();
+    }
+    mutlock.release();
+    return track;
     }
     
-    private int waitingSpeaker = 0;
-    private int sendingSpeaker = 0;
-    private int waitingListener = 0;
-    private int recievingListener = 0;
+    private Lock mutlock= new Lock();
+    private Condition2 speaker = new Condition2(mutlock);
+    private Condition2 listener= new Condition2(mutlock);
     private int data;
-    private Lock lock;
-    private Condition2 speaker;
-    private Condition2 listener;
-    private Condition2 waitingReturn;
+    private boolean inTransaction;
+  
 }
