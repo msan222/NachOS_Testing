@@ -1,5 +1,4 @@
 package nachos.threads;
-
 import nachos.machine.*;
 
 /**
@@ -36,7 +35,7 @@ public class KThread {
 	
 	//child calls join, parent has to finish before child starts again
     public static KThread currentThread() {
-	Lib.assertTrue(currentThread != null);
+	Lib.assertTrue(currentThread != null); //assuming that what we have isn't the empty
 	return currentThread;
     }
     
@@ -44,14 +43,14 @@ public class KThread {
      * Allocate a new <tt>KThread</tt>. If this is the first <tt>KThread</tt>,
      * create an idle thread as well.
      */
-    public KThread() { //******Might need adjustments
+    public KThread() {
 	if (currentThread != null) {
 	    tcb = new TCB();
 	}	    
 	else {
-		joinQueue=ThreadedKernel.scheduler.newThreadQueue(false);
+		joinQueue= ThreadedKernel.scheduler.newThreadQueue(false);		//setting our condition variables that we just worked on
 	    readyQueue = ThreadedKernel.scheduler.newThreadQueue(false);
-	    readyQueue.acquire(this);	    
+	    readyQueue.acquire(this);	 									//getting that thread ready 
 	    currentThread = this;
 	    tcb = TCB.currentTCB();
 	    name = "main";
@@ -280,19 +279,20 @@ public class KThread {
     public void join() {
 	Lib.debug(dbgThread, "Joining to thread: " + toString());
 
-	Lib.assertTrue(this != currentThread);
+	Lib.assertTrue(this != currentThread);						//making sure it isn't this
 	
 	if(this.status == statusFinished) {
 		return;
 	}
-	boolean inStatus = Machine.interrupt().disable();
-	if(KThread.currentThread.isJoined);
+	
+	boolean machStat = Machine.interrupt().disable();
+	if(KThread.currentThread.isJoined);					
 	else {
-		joinQueue.waitForAccess(currentThread);
+		joinQueue.waitForAccess(currentThread);				
 		isJoined = true;
 		sleep();
 	}
-	Machine.interrupt().restore(inStatus);
+	Machine.interrupt().restore(machStat);
     }
 
     /**

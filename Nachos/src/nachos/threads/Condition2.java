@@ -1,5 +1,6 @@
 package nachos.threads;
 import nachos.machine.*;
+import java.util.*;
 
 /**
  * An implementation of condition variables that disables interrupt()s for
@@ -19,7 +20,12 @@ public class Condition2 {
      *				lock whenever it uses <tt>sleep()</tt>,
      *				<tt>wake()</tt>, or <tt>wakeAll()</tt>.
      */
-    public Condition2(Lock conditionLock) {
+    
+	private Lock conditionLock;
+    private ThreadQueue waitQueue;
+    private int countVal;
+	
+	public Condition2(Lock conditionLock) {
 	this.conditionLock = conditionLock;
 	waitQueue = ThreadedKernel.scheduler.newThreadQueue(false);
     }
@@ -36,8 +42,8 @@ public class Condition2 {
 	boolean machstat = Machine.interrupt().disable();
 	countVal++;
 	waitQueue.waitForAccess(KThread.currentThread());
-	KThread.sleep();
 	conditionLock.acquire();
+	KThread.sleep();
 	Machine.interrupt().restore(machstat);
     }
 
@@ -66,8 +72,8 @@ public class Condition2 {
 	while(true) {
 		KThread thread = waitQueue.nextThread();
 		if(thread == null)break;						//since we have to keep going to the next thread use a break statement to finish once its empty
-		thread.ready();
 		countVal = 0;
+		thread.ready();
 	}
 	Machine.interrupt().restore(machstat);
     }
@@ -75,8 +81,4 @@ public class Condition2 {
     public int getThreadCount() {
     	return countVal;
     }
-
-    private Lock conditionLock;
-    private ThreadQueue waitQueue;
-    private int countVal;
 }
