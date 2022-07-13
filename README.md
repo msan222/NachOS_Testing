@@ -39,7 +39,7 @@ newThreadQueue that would receive the signal to transfer priorities. In that cla
 the methods getPriority(), getEffectivePriority(), setPriority(), increasePriority(), decreasePriority(), 
 getThreadState(), and ThreadPriorityQueue() (which contained the following:
 A constructor, a method telling the machine to waitForAccess(),  acquire(), nextThread(), 
-updateThreadState(), pickNextThread(). And using a tying class that allowed us to compare and act upon the
+updateThreadState(), pickNextThread(). And using a tying class that allows for it to compare and act upon the
 time, and also a HashMap to keep track of the thread states along with an instance of the class that 
 controlled donation). The trickiest part involved making another class, Donator, to control the donation 
 properties, with methods to find the maximum priorities, set them, and transfer them. Then the scheduling 
